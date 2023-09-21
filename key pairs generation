@@ -1,0 +1,87 @@
+const SHA256 = require('crypto-js/sha256');
+const EC = require('elliptic').ec; // Library for elliptic curve cryptography
+const ec = new EC('secp256k1'); // Using Bitcoin's elliptic curve
+
+class Transaction {
+    constructor(sender, recipient, amount) {
+        this.sender = sender;
+        this.recipient = recipient;
+        this.amount = amount;
+        this.timestamp = Date.now();
+    }
+
+    calculateHash() {
+        return SHA256(this.sender + this.recipient + this.amount + this.timestamp).toString();
+    }
+
+    signTransaction(signingKey) {
+        if (signingKey.getPublic('hex') !== this.sender) {
+            throw new Error('You cannot sign transactions for other wallets!');
+        }
+
+        const hashTx = this.calculateHash();
+        const signature = signingKey.sign(hashTx, 'base64');
+        this.signature = signature.toDER('hex');
+    }
+
+    isValid() {
+        if (!this.signature || this.signature.length === 0) {
+            throw new Error('Transaction signature is missing!');
+        }
+
+        const publicKey = ec.keyFromPublic(this.sender, 'hex');
+        return publicKey.verify(this.calculateHash(), this.signature);
+    }
+}
+
+class Block {
+    // ... (same as before)
+}
+
+class Blockchain {
+    // ... (same as before)
+
+    createTransaction(transaction) {
+        if (!transaction.sender || !transaction.recipient || !transaction.amount) {
+            throw new Error('Transaction must include sender, recipient, and amount!');
+        }
+
+        if (!transaction.isValid()) {
+            throw new Error('Invalid transaction signature!');
+        }
+
+        this.pendingTransactions.push(transaction);
+    }
+
+    minePendingTransactions(miningRewardAddress) {
+        const rewardTx = new Transaction(null, miningRewardAddress, this.miningReward);
+        this.pendingTransactions.push(rewardTx);
+
+        const newBlock = new Block(this.chain.length, Date.now(), this.pendingTransactions, this.getLatestBlock().hash);
+        newBlock.mineBlock(this.difficulty);
+
+        console.log('Block mined: ' + newBlock.hash);
+        this.chain.push(newBlock);
+
+        this.pendingTransactions = [];
+    }
+}
+
+// Example usage
+const myKey = ec.keyFromPrivate('YourPrivatePrivateKeyGoesHere'); // Replace with your private key
+const myWalletAddress = myKey.getPublic('hex');
+
+const vishnucoin = new Blockchain();
+
+const tx1 = new Transaction(myWalletAddress, 'recipient1', 10);
+tx1.signTransaction(myKey);
+vishnucoin.createTransaction(tx1);
+
+const tx2 = new Transaction(myWalletAddress, 'recipient2', 20);
+tx2.signTransaction(myKey);
+vishnucoin.createTransaction(tx2);
+
+console.log('\nStarting the miner...');
+vishnucoin.minePendingTransactions(myWalletAddress);
+
+console.log('\nBalance of my wallet:', vishnucoin.getBalanceOfAddress(myWalletAddress));
