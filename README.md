@@ -1,7 +1,6 @@
 - 👋 Hi, I’m @vishnuvardhangurujala
 - 👀 I’m interested in Blockchain Technology
 - 🌱 I’m currently learning Javascript and smart contract auditing
-- 💞️ I’m looking to collaborate on integration of wearable electronics and blockchain technology
 - 📫 How to reach me +91 7673906998,www.linkedin.com/in/vishnu-vardhan-gurujala-41377524b
 - 
 
